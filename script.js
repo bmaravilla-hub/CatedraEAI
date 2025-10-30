@@ -1,210 +1,182 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // ================== CONFIGURA LA IP DEL ARDUINO ==================
-    const ARDUINO_IP = '192.168.1.100';  //  IP real
-    // ========================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  let ARDUINO_IP = "";
+  let API_BASE_URL = "";
+  let pollingInterval = null;
+  let isAutoMode = false;
 
-    const API_BASE_URL = `http://${ARDUINO_IP}`;
-    
-    // Elementos del DOM
-    const elements = {
-        preloader: document.getElementById('preloader'),
-        distanceValue: document.getElementById('distance-value'),
-        rangeMarker: document.getElementById('range-marker'),
-        statusDot: document.getElementById('status-dot'),
-        statusText: document.getElementById('status-text'),
-        btnLeft: document.getElementById('btn-left'),
-        btnStop: document.getElementById('btn-stop'),
-        btnRight: document.getElementById('btn-right'),
-        btnAuto: document.getElementById('btn-auto'),
-        directionIndicator: document.getElementById('direction-indicator'),
-        directionText: document.getElementById('direction-text'),
-        ipAddress: document.getElementById('ip-address'),
-        autoText: document.getElementById('auto-text')
+  const el = {
+    preloader: document.getElementById("preloader"),
+    inputIP: document.getElementById("input-ip"),
+    btnSetIP: document.getElementById("btn-set-ip"),
+    ipAddress: document.getElementById("ip-address"),
+    distanceValue: document.getElementById("distance-value"),
+    rangeMarker: document.getElementById("range-marker"),
+    statusDot: document.getElementById("status-dot"),
+    statusText: document.getElementById("status-text"),
+    btnLeft: document.getElementById("btn-left"),
+    btnStop: document.getElementById("btn-stop"),
+    btnRight: document.getElementById("btn-right"),
+    btnAuto: document.getElementById("btn-auto"),
+    directionIndicator: document.getElementById("direction-indicator"),
+    directionText: document.getElementById("direction-text"),
+    modeIcon: null,
+    modeText: null,
+  };
+
+  // 🔹 Ocultar preloader automáticamente después de 2 s
+  setTimeout(() => {
+    el.preloader.style.opacity = "0";
+    setTimeout(() => (el.preloader.style.display = "none"), 500);
+  }, 2000);
+
+  // 🔹 Botón "Conectar"
+  el.btnSetIP.addEventListener("click", () => {
+    const ip = el.inputIP.value.trim();
+    if (!ip) return alert("Por favor ingresa una IP válida.");
+
+    ARDUINO_IP = ip;
+    API_BASE_URL = `http://${ARDUINO_IP}`;
+    el.ipAddress.textContent = `Conectado a: ${ARDUINO_IP}`;
+
+    if (pollingInterval) clearInterval(pollingInterval);
+    startSensorPolling();
+  });
+
+  // ===== FUNCIONES =====
+
+  async function getSensorData() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/sensor`);
+      if (!res.ok) throw new Error("Error de conexión");
+      return await res.json();
+    } catch (err) {
+      console.error("Error:", err);
+      showError("No se puede conectar al Arduino");
+      return null;
+    }
+  }
+
+  async function sendMotorCommand(dir) {
+    if (!API_BASE_URL) return showError("Primero conecta la IP del Arduino");
+    try {
+      await fetch(`${API_BASE_URL}/api/motor/${dir}`, { method: "POST" });
+    } catch {
+      showError("Error de conexión");
+    }
+  }
+
+  async function sendModeCommand(mode) {
+    if (!API_BASE_URL) return showError("Primero conecta la IP del Arduino");
+    try {
+      await fetch(`${API_BASE_URL}/api/mode/${mode}`, { method: "POST" });
+      isAutoMode = mode === "auto";
+      updateAutoButton();
+    } catch {
+      showError("Error de conexión");
+    }
+  }
+
+  function startSensorPolling() {
+    pollingInterval = setInterval(async () => {
+      const data = await getSensorData();
+      if (data) updateSensorDisplay(data);
+    }, 800);
+  }
+
+  function updateSensorDisplay({ distance = 0, mode = "MANUAL", direction = "STOP" }) {
+    el.distanceValue.textContent = distance;
+    el.rangeMarker.style.left = `${Math.min((distance / 350) * 100, 100)}%`;
+
+    updateStatus(distance);
+    updateDirection(direction);
+    isAutoMode = mode === "AUTO";
+    updateAutoButton();
+  }
+
+  function updateStatus(d) {
+    if (d >= 100 && d <= 200) {
+      el.statusDot.style.background = "#4CAF50";
+      el.statusText.textContent = "Objeto en rango (100–200 cm)";
+    } else if (d > 200 && d <= 300) {
+      el.statusDot.style.background = "#2196F3";
+      el.statusText.textContent = "Objeto en rango (200–300 cm)";
+    } else {
+      el.statusDot.style.background = "#f44336";
+      el.statusText.textContent = "Fuera de rango";
+    }
+  }
+
+  function updateDirection(dir) {
+    const icons = {
+      LEFT: '<i class="fas fa-undo rotating"></i>',
+      RIGHT: '<i class="fas fa-redo rotating"></i>',
+      STOP: '<i class="fas fa-pause"></i>',
     };
+    el.directionIndicator.innerHTML = icons[dir] || icons.STOP;
+    el.directionText.textContent =
+      dir === "LEFT"
+        ? "Girando a la izquierda"
+        : dir === "RIGHT"
+        ? "Girando a la derecha"
+        : "Motor detenido";
+  }
 
-    let isAutoMode = false;
-    let currentDirection = 'STOP';
+  function updateAutoButton() {
+    // Actualizar el contenido del botón
+    if (isAutoMode) {
+      el.btnAuto.classList.add("active");
+      el.btnAuto.innerHTML = `
+        <i class="fas fa-robot mode-icon"></i>
+        <span class="mode-text">MODO AUTOMÁTICO</span>
+      `;
+    } else {
+      el.btnAuto.classList.remove("active");
+      el.btnAuto.innerHTML = `
+        <i class="fas fa-hand-paper mode-icon"></i>
+        <span class="mode-text">MODO MANUAL</span>
+      `;
+    }
+    
+    // Actualizar referencias a los elementos
+    el.modeIcon = el.btnAuto.querySelector(".mode-icon");
+    el.modeText = el.btnAuto.querySelector(".mode-text");
+  }
 
-    // Ocultar preloader después de 2 segundos
+  function showError(msg) {
+    el.statusText.textContent = `❌ ${msg}`;
+    el.statusDot.style.background = "#ff0000";
     setTimeout(() => {
-        elements.preloader.style.opacity = '0';
-        setTimeout(() => {
-            elements.preloader.style.display = 'none';
-            startSensorPolling();
-            elements.ipAddress.textContent = `Conectado a: ${ARDUINO_IP}`;
-        }, 500);
-    }, 2000);
+      el.statusText.textContent = "Esperando datos...";
+      el.statusDot.style.background = "#ccc";
+    }, 3000);
+  }
 
-    // Obtener datos del sensor
-    async function getSensorData() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/sensor`);
-            if (!response.ok) throw new Error('Error en la respuesta');
-            return await response.json();
-        } catch (error) {
-            console.error('Error conectando con Arduino:', error);
-            showError('No se puede conectar al Arduino');
-            return null;
-        }
-    }
-
-    // Enviar comando al motor
-    async function sendMotorCommand(direction) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/motor/${direction}`, {
-                method: 'POST'
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                return data;
-            } else {
-                showError(data.message);
-                return null;
-            }
-        } catch (error) {
-            console.error('Error controlando motor:', error);
-            showError('Error de conexión');
-            return null;
-        }
-    }
-
-    // Actualizar interfaz con datos del sensor
-    function updateSensorDisplay(sensorData) {
-        if (!sensorData) return;
-
-        const distance = sensorData.distance || 0;
-        const mode = sensorData.mode || 'MANUAL';
-        const direction = sensorData.direction || 'STOP';
-
-        // Actualizar distancia
-        elements.distanceValue.textContent = distance;
-        
-        // Actualizar marcador de rango
-        const markerPosition = Math.min((distance / 350) * 100, 100);
-        elements.rangeMarker.style.left = `${markerPosition}%`;
-        
-        // Actualizar estado
-        updateStatus(distance, direction);
-        
-        // Actualizar modo y dirección
-        isAutoMode = (mode === 'AUTO');
-        updateAutoButton();
-        updateDirectionIndicator(direction);
-    }
-
-    // Actualizar estado según distancia
-    function updateStatus(distance, direction) {
-        if (distance >= 100 && distance <= 200) {
-            elements.statusDot.style.backgroundColor = '#4CAF50';
-            elements.statusText.textContent = 'Objeto en rango (100-200cm)';
-            elements.statusDot.classList.add('active');
-        } else if (distance > 200 && distance <= 300) {
-            elements.statusDot.style.backgroundColor = '#2196F3';
-            elements.statusText.textContent = 'Objeto en rango (200-300cm)';
-            elements.statusDot.classList.add('active');
-        } else {
-            elements.statusDot.style.backgroundColor = '#f44336';
-            elements.statusText.textContent = 'Fuera de rango';
-            elements.statusDot.classList.remove('active');
-        }
-    }
-
-    // Actualizar indicador de dirección
-    function updateDirectionIndicator(direction) {
-        elements.directionIndicator.innerHTML = '';
-        let icon, text;
-        
-        switch(direction) {
-            case 'LEFT':
-                icon = '<i class="fas fa-undo rotating"></i>';
-                text = 'Girando a la izquierda';
-                break;
-            case 'RIGHT':
-                icon = '<i class="fas fa-redo rotating"></i>';
-                text = 'Girando a la derecha';
-                break;
-            default:
-                icon = '<i class="fas fa-pause"></i>';
-                text = 'Motor detenido';
-        }
-        
-        elements.directionIndicator.innerHTML = icon;
-        elements.directionText.textContent = text;
-        currentDirection = direction;
-    }
-
-    // Actualizar botón de modo automático
-    function updateAutoButton() {
-        if (isAutoMode) {
-            elements.btnAuto.classList.add('active');
-            elements.btnAuto.innerHTML = '<i class="fas fa-toggle-on btn-icon"></i> Modo Automático ACTIVADO';
-            elements.autoText.textContent = 'Modo Automático ACTIVADO';
-        } else {
-            elements.btnAuto.classList.remove('active');
-            elements.btnAuto.innerHTML = '<i class="fas fa-toggle-off btn-icon"></i> Modo Manual ACTIVADO';
-            elements.autoText.textContent = 'Modo Manual ACTIVADO';
-        }
-    }
-
-    // Mostrar error
-    function showError(message) {
-        elements.statusText.textContent = `❌ ${message}`;
-        elements.statusDot.style.backgroundColor = '#ff0000';
-        
-        setTimeout(() => {
-            if (elements.statusText.textContent.includes(message)) {
-                elements.statusText.textContent = 'Esperando datos...';
-                elements.statusDot.style.backgroundColor = '#ccc';
-            }
-        }, 3000);
-    }
-
-    // Polling de datos del sensor
-    function startSensorPolling() {
-        setInterval(async () => {
-            const sensorData = await getSensorData();
-            if (sensorData) {
-                updateSensorDisplay(sensorData);
-            }
-        }, 800);
-    }
-
-    // Event Listeners para botones
-    elements.btnLeft.addEventListener('click', async () => {
-        if (!isAutoMode) {
-            const result = await sendMotorCommand('left');
-            if (result) {
-                updateDirectionIndicator('LEFT');
-            }
-        } else {
-            showError('Modo automático activado - Usa el botón físico');
-        }
-    });
-
-    elements.btnStop.addEventListener('click', async () => {
-        if (!isAutoMode) {
-            const result = await sendMotorCommand('stop');
-            if (result) {
-                updateDirectionIndicator('STOP');
-            }
-        } else {
-            showError('Modo automático activado - Usa el botón físico');
-        }
-    });
-
-    elements.btnRight.addEventListener('click', async () => {
-        if (!isAutoMode) {
-            const result = await sendMotorCommand('right');
-            if (result) {
-                updateDirectionIndicator('RIGHT');
-            }
-        } else {
-            showError('Modo automático activado - Usa el botón físico');
-        }
-    });
-
-    elements.btnAuto.addEventListener('click', () => {
-        showError('Usa el BOTÓN FÍSICO en el circuito para cambiar modo');
-    });
+  // Botones manuales
+  el.btnLeft.addEventListener("click", () =>
+    !isAutoMode ? sendMotorCommand("left") : showError("Modo automático activado")
+  );
+  el.btnStop.addEventListener("click", () =>
+    !isAutoMode ? sendMotorCommand("stop") : showError("Modo automático activado")
+  );
+  el.btnRight.addEventListener("click", () =>
+    !isAutoMode ? sendMotorCommand("right") : showError("Modo automático activado")
+  );
+  
+  // Botón de modo automático/manual
+  el.btnAuto.addEventListener("click", () => {
+    // Aplicar la animación al botón
+    el.btnAuto.classList.add("mode-switch-animation");
+    
+    // Quitar la clase de animación después de que termine
+    setTimeout(() => {
+      el.btnAuto.classList.remove("mode-switch-animation");
+    }, 800);
+    
+    // Cambiar el modo
+    const newMode = isAutoMode ? "manual" : "auto";
+    sendModeCommand(newMode);
+  });
+  
+  // Inicializar el botón
+  updateAutoButton();
 });

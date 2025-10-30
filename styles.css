@@ -365,18 +365,118 @@ header h1 {
 /* Control Automático */
 .auto-btn {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, var(--aqua) 0%, #06b6d4 100%);
-  color: white;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
   margin: 1rem 0;
   width: 100%;
+  transition: all 0.5s ease;
+  position: relative;
+  overflow: hidden;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* Estilo para modo manual */
+.auto-btn:not(.active) {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
+  color: white;
+}
+
+/* Estilo para modo automático */
 .auto-btn.active {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  color: white;
+}
+
+/* Animación para el botón de modo */
+@keyframes modeSwitch {
+  0% { transform: scale(1); }
+  10% { transform: scale(0.9); }
+  50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(255, 255, 255, 0.8); }
+  90% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.mode-switch-animation {
+  animation: modeSwitch 0.8s ease;
+}
+
+/* Indicador de modo */
+.mode-text {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mode-icon {
+  font-size: 2rem;
+  transition: all 0.5s ease;
+}
+
+/* Animación para el ícono de toggle */
+@keyframes toggleOn {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(180deg); }
+}
+
+@keyframes toggleOff {
+  0% { transform: rotate(180deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.toggle-on {
+  animation: toggleOn 0.5s forwards;
+}
+
+.toggle-off {
+  animation: toggleOff 0.5s forwards;
+}
+
+.control-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.control-btn.stop {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+}
+
+.btn-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Dirección del Motor */
+.motor-direction {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(144, 224, 239, 0.2);
+  border-radius: 10px;
+}
+
+.direction-indicator {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+}
+
+.rotating {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .ranges-info {
@@ -471,3 +571,36 @@ footer {
 .photo-container:has(.team-photo[src*=".png"]) .photo-overlay {
   display: none;
 }
+
+/* === Campo de IP manual === */
+.ip-input-container {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ip-input-container input {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 220px;
+  font-size: 0.9rem;
+}
+
+.ip-input-container button {
+  padding: 8px 15px;
+  background: var(--light-blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.ip-input-container button:hover {
+  background: var(--medium-blue);
+}
+
+
