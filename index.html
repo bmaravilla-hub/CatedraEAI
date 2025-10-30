@@ -2,170 +2,162 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Motor Arduino</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Motor Arduino</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 
 <body>
-    <div id="preloader">
-        <div class="ocean-loader">
-            <div class="water"></div>
-            <div class="water"></div>
-            <div class="water"></div>
-        </div>
-        <p>Inicializando sistema...</p>
+  <!-- PRELOADER -->
+  <div id="preloader">
+    <div class="ocean-loader">
+      <div class="water"></div>
+      <div class="water"></div>
+      <div class="water"></div>
     </div>
+    <p>Inicializando sistema...</p>
+  </div>
 
-    <header>
-        <div class="container">
-            <div class="logo-section">
-                <img src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg"
-                    alt="Escudo Barcelona" class="barcelona-logo">
-                <h1>Control de Motor Arduino R4 WiFi</h1>
-            </div>
-            <div class="verse">
-                <p id="ip-address" class="ip-address">Buscando Arduino...</p>
-            </div>
+  <header>
+    <div class="container">
+      <div class="logo-section">
+        <img src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg"
+          alt="Escudo Barcelona" class="barcelona-logo" />
+        <h1>Control de Motor Arduino R4 WiFi</h1>
+      </div>
+
+      <!-- Campo para ingresar IP manual -->
+      <div class="ip-input-container">
+        <input type="text" id="input-ip" placeholder="Introduce IP del Arduino (ej: 192.168.1.105)" />
+        <button id="btn-set-ip">Conectar</button>
+      </div>
+
+      <div class="verse">
+        <p id="ip-address" class="ip-address">Esperando conexión...</p>
+      </div>
+    </div>
+  </header>
+
+  <section id="team" class="section">
+    <div class="container">
+      <h2>Nuestro Equipo</h2>
+      <div class="team-grid">
+        <div class="team-member">
+          <div class="photo-container">
+            <img src="img/Maravilla.jpg" alt="Maravilla" class="team-photo" />
+          </div>
+          <p class="member-name">MARAVILLA</p>
         </div>
-    </header>
 
-    <section id="team" class="section">
-        <div class="container">
-            <h2>Nuestro Equipo</h2>
-            <div class="team-grid">
-                <div class="team-member">
-                    <div class="photo-container">
-                        <img src="img/Maravilla.jpg" alt="Maravilla" class="team-photo">
-                        <div class="photo-overlay">
-                        </div>
-                    </div>
-                    <p class="member-name">MARAVILLA</p>
-                </div>
-                <div class="team-member">
-                    <div class="photo-container">
-                        <img src="img/Ruano.jpg" alt="Orozco" class="team-photo">
-                        <div class="photo-overlay">
-                        </div>
-                    </div>
-                    <p class="member-name">RUANO</p>
-                </div>
-                <div class="team-member">
-                    <div class="photo-container">
-                        <img src="img/Orozco.jpg" alt="Orozco" class="team-photo">
-                        <div class="photo-overlay">
-                        </div>
-                    </div>
-                    <p class="member-name">OROZCO</p>
-                </div>
-                <div class="team-member">
-                    <div class="photo-container">
-                        <img src="img/Cruz.jpg" alt="Maravilla" class="team-photo">
-                        <div class="photo-overlay">
-                        </div>
-                    </div>
-                    <p class="member-name">CRUZ</p>
-                </div>            
-            </div>
+        <div class="team-member">
+          <div class="photo-container">
+            <img src="img/Ruano.jpg" alt="Ruano" class="team-photo" />
+          </div>
+          <p class="member-name">RUANO</p>
         </div>
-    </section>
 
-    <!-- Panel de Control -->
-    <section id="control" class="section">
-        <div class="container">
-            <h2>Control del Motor</h2>
-
-            <div class="control-panel">
-                <div class="sensor-reader">
-                    <h3><i class="fas fa-ruler"></i> Sensor Ultrasónico</h3>
-                    <div class="distance-display">
-                        <div class="distance-container">
-                            <span id="distance-value">--</span>
-                            <span class="unit">cm</span>
-                        </div>
-                    </div>
-
-                    <div class="range-indicator">
-                        <div class="range-bar">
-                            <div class="range-marker" id="range-marker"></div>
-                        </div>
-                        <div class="range-labels">
-                            <span>0cm</span>
-                            <span>100cm</span>
-                            <span>200cm</span>
-                            <span>300cm</span>
-                        </div>
-                    </div>
-
-                    <div class="status-indicator">
-                        <div class="status-dot" id="status-dot"></div>
-                        <span id="status-text">Conectando...</span>
-                    </div>
-                </div>
-
-                <div class="manual-controls">
-                    <h3><i class="fas fa-gamepad"></i> Control Manual</h3>
-                    <div class="control-buttons">
-                        <button id="btn-left" class="control-btn">
-                            <i class="fas fa-undo btn-icon"></i>
-                            Girar Izquierda
-                        </button>
-                        <button id="btn-stop" class="control-btn stop">
-                            <i class="fas fa-stop btn-icon"></i>
-                            Detener
-                        </button>
-                        <button id="btn-right" class="control-btn">
-                            <i class="fas fa-redo btn-icon"></i>
-                            Girar Derecha
-                        </button>
-                    </div>
-
-                    <div class="motor-direction">
-                        <p>Dirección actual:</p>
-                        <div class="direction-indicator" id="direction-indicator">
-                            <i class="fas fa-pause"></i>
-                        </div>
-                        <p id="direction-text">Motor detenido</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="auto-control">
-                <h3><i class="fas fa-robot"></i> Control Automático</h3>
-                <button id="btn-auto" class="auto-btn">
-                    <i class="fas fa-toggle-off btn-icon"></i>
-                    <span id="auto-text">Activar Control por Sensor</span>
-                </button>
-                <div class="ranges-info">
-                    <div class="range-item">
-                        <span class="range-color green"></span>
-                        <span><strong>100-200cm</strong> → Giro Derecha</span>
-                    </div>
-                    <div class="range-item">
-                        <span class="range-color blue"></span>
-                        <span><strong>200-300cm</strong> → Giro Izquierda</span>
-                    </div>
-                    <div class="range-item">
-                        <span class="range-color red"></span>
-                        <span><strong>Fuera de rango</strong> → Motor Detenido</span>
-                    </div>
-                </div>
-                <p class="note">💡 <strong>Nota:</strong> Usa el botón físico en el circuito para cambiar entre modo
-                    Manual/Automático</p>
-            </div>
+        <div class="team-member">
+          <div class="photo-container">
+            <img src="img/Orozco.jpg" alt="Orozco" class="team-photo" />
+          </div>
+          <p class="member-name">OROZCO</p>
         </div>
-    </section>
 
-    <footer>
-        <div class="container">
-            <p>Proyecto de Cátedra - Escuela de Ingeniería en Computación</p>
-            <p>www.semita.sv</p>
+        <div class="team-member">
+          <div class="photo-container">
+            <img src="img/Cruz.jpg" alt="Cruz" class="team-photo" />
+          </div>
+          <p class="member-name">CRUZ</p>
         </div>
-    </footer>
+      </div>
+    </div>
+  </section>
 
-    <script src="script.js"></script>
+  <section id="control" class="section">
+    <div class="container">
+      <h2>Control del Motor</h2>
+      <div class="control-panel">
+        <div class="sensor-reader">
+          <h3><i class="fas fa-ruler"></i> Sensor Ultrasónico</h3>
+          <div class="distance-container">
+            <span id="distance-value">--</span><span class="unit">cm</span>
+          </div>
+
+          <div class="range-bar">
+            <div class="range-marker" id="range-marker"></div>
+          </div>
+          <div class="range-labels">
+            <span>0cm</span>
+            <span>100cm</span>
+            <span>200cm</span>
+            <span>300cm</span>
+          </div>
+
+          <div class="status-indicator">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Esperando datos...</span>
+          </div>
+        </div>
+
+        <div class="manual-controls">
+          <h3><i class="fas fa-gamepad"></i> Control Manual</h3>
+          <div class="control-buttons">
+            <button id="btn-left" class="control-btn">
+              <i class="fas fa-undo btn-icon"></i> Girar Izquierda
+            </button>
+            <button id="btn-stop" class="control-btn stop">
+              <i class="fas fa-stop btn-icon"></i> Detener
+            </button>
+            <button id="btn-right" class="control-btn">
+              <i class="fas fa-redo btn-icon"></i> Girar Derecha
+            </button>
+          </div>
+
+          <div class="motor-direction">
+            <p>Dirección actual:</p>
+            <div class="direction-indicator" id="direction-indicator">
+              <i class="fas fa-pause"></i>
+            </div>
+            <p id="direction-text">Motor detenido</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="auto-control">
+        <h3><i class="fas fa-exchange-alt"></i> Cambio de Modo</h3>
+        <button id="btn-auto" class="auto-btn">
+          <i class="fas fa-hand-paper mode-icon"></i>
+          <span class="mode-text">MODO MANUAL</span>
+        </button>
+        <div class="ranges-info">
+          <div class="range-item">
+            <span class="range-color green"></span>
+            <span><strong>100–200 cm</strong> → Giro Derecha</span>
+          </div>
+          <div class="range-item">
+            <span class="range-color blue"></span>
+            <span><strong>200–300 cm</strong> → Giro Izquierda</span>
+          </div>
+          <div class="range-item">
+            <span class="range-color red"></span>
+            <span><strong>Fuera de rango</strong> → Motor Detenido</span>
+          </div>
+        </div>
+        <p class="note">💡 <strong>Nota:</strong> Haz clic en el botón para cambiar entre modo Manual/Automático.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>Proyecto de Cátedra - Escuela de Ingeniería en Computación</p>
+      <p>www.semita.sv</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 
 </html>
